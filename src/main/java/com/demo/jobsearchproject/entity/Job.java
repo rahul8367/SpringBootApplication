@@ -28,6 +28,10 @@ public class Job {
     @JoinTable(name = "job_skill", joinColumns = { @JoinColumn(name = "job_id") }, inverseJoinColumns = {
             @JoinColumn(name = "skill_id") })
     private List<Skill> listOfSkill =new ArrayList<>();
+    @ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.MERGE, CascadeType.PERSIST })
+    @JoinTable(name = "job_commute", joinColumns = { @JoinColumn(name = "job_id") }, inverseJoinColumns = {
+            @JoinColumn(name = "commute_id") })
+    private List<Commute> listOfCommute =new ArrayList<>();
 
     public Job(long id, String jobTitle, String location, String companyName) {
         this.id = id;
@@ -40,4 +44,8 @@ public class Job {
         listOfSkill.add(skill);
     }
 
+    public void setListOfCommute(Commute commute) {
+
+        this.listOfCommute.add(commute);
+    }
 }

@@ -2,16 +2,19 @@ package com.demo.jobsearchproject.controllers;
 
 import com.demo.jobsearchproject.converter.Converter;
 import com.demo.jobsearchproject.dto.SearchDto;
+import com.demo.jobsearchproject.entity.Commute;
 import com.demo.jobsearchproject.entity.Job;
 import com.demo.jobsearchproject.entity.Skill;
 import com.demo.jobsearchproject.jobexception.NotFoundException;
 import com.demo.jobsearchproject.jobexception.NullException;
+import com.demo.jobsearchproject.repository.CommuteRepository;
 import com.demo.jobsearchproject.repository.JobRepository;
 import com.demo.jobsearchproject.repository.SkillRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api")
@@ -23,6 +26,8 @@ public class Controller {
     private SkillRepository skillRepository;
     @Autowired
     private Converter converter;
+    @Autowired
+    private CommuteRepository commuteRepository;
 
 
     //.............................................for searching...........................................................................................................
@@ -208,4 +213,67 @@ public class Controller {
     public List<Skill> getAllSkill(){
         return skillRepository.findAll();
     }
+
+
+
+    /* the commute option ..............................................................................................
+    ;..
+     */
+    @GetMapping("/commute")
+    public List<Commute> getAllCommute(){
+        return commuteRepository.findAll();
+    }
+    @GetMapping("/commute/{id}")
+    public Commute getCommuteById(@PathVariable("id") Long id){
+        Commute obj=commuteRepository.findById(id).orElseThrow(() -> new NotFoundException("skill not found with id :" + id));
+        return obj;
+    }
+    @PostMapping("/commute")
+    public Commute saveDataCommute(@RequestBody Commute commute){
+        if(commute.getCommuteTypes().length()<=1){
+            throw new NullException("the commute field is must not null ");
+        }
+
+        return commuteRepository.save(commute);
+    }
+    @PutMapping("/commute/{id}")
+    public String updateCommuteData(@PathVariable("id") Long id){
+        Commute obj=commuteRepository.findById(id).orElseThrow(() -> new NotFoundException("commute not found with id :" + id));
+        return "the commute" +id+" is updated" ;
+    }
+    @DeleteMapping("/commute/{id}")
+    public String deleteCommuteById(@PathVariable("id") Long id){
+        try{
+            commuteRepository.deleteById(id);
+            return "the commute was deleted";
+        }
+        catch (Exception e){
+            throw new NotFoundException("commute not found with id ="+id);
+        }
+    }
+    /*
+    the commute and job table interlinks crude operations...............................................................................
+     */
+    @PostMapping("/job/{id}/commute")
+    public Job addCommuteToJob(@PathVariable("id") Long id ,@RequestBody Commute commute){
+        Job obj=jobRepository.findById(id).orElseThrow(() -> new NotFoundException("job not found with id :" + id));
+        if(commute.getCommuteTypes().length()<=1){
+            throw new NullException("the commute field is must not null ");
+        }
+        obj.setListOfCommute(commute);
+
+        return jobRepository.save(obj);
+    }
+    @GetMapping("/job/{id1}/commute/{id2}")
+    public Optional<Commute> updateCommuteByJobId(@PathVariable("id1") Long id1, @PathVariable("id2") Long id2){
+        Job obj=jobRepository.findById(id1).orElseThrow(() -> new NotFoundException("job not found with id :" + id1));
+        for(Commute c: obj.getListOfCommute()){
+            if(c.getId()==id2){
+                return commuteRepository.findById(id2);
+            }
+
+        }
+        throw new NullException("commute not found with this id "+id2);
+    }
+
 }
